@@ -1,32 +1,34 @@
 
 const ErrorResponse = require('../utils/errorResponse');
 
-const errorHandler = (error, req, res, next) => {
-    let errorResponse = {...error};
-    console.log(error.stack.red);
+const errorHandler = (err, req, res, next) => {
+    let error = { ...err };
 
-    // Mongoose bad object id
-    if(error.name === 'CastError') {
-        const message = `Item not found with id of ${error.value}`;
-        errorResponse = new ErrorResponse(message, 404);
+    error.message = err.message;
+    console.log(err);
+
+    // Mongoose bad ObjectId
+    if (err.name === 'CastError') {
+        const message = 'Resource not found';
+        error = new ErrorResponse(message, 404);
     }
 
     // Mongoose duplicate key
-    if(error.code === 11000) {
-        const message = `Duplicate key`;
-        errorResponse = new ErrorResponse(message, 400);
+    if (err.code === 11000) {
+        const message = 'Duplicate field value entered';
+        error = new ErrorResponse(message, 400);
     }
 
     // Mongoose validation error
-    if(error.name === 'ValidationError') {
-        const message = Object.values(error.errors).map(value => value.path);
-        errorResponse = new ErrorResponse('Missing required parameters: ' + message, 400);
+    if (err.name === 'ValidationError') {
+        const message = Object.values(err.errors).map(val => val.message);
+        error = new ErrorResponse(message, 400);
     }
 
-    res.status(errorResponse.statusCode || 500).json({
+    res.status(error.statusCode || 500).json({
         success: false,
-        error: errorResponse.message
+        error: error.message || 'Server Error'
     });
-}
+};
 
 module.exports = errorHandler;

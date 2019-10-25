@@ -32,7 +32,7 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
     });
 
     if(!course) {
-        next(new ErrorResponse(`Course with the id ${req.params.id} has not been found`, 404));
+        return next(new ErrorResponse(`Course with the id ${req.params.id} has not been found`, 404));
     }
 
     res.status(200).json({ success: true, data: course});
@@ -47,10 +47,7 @@ exports.createCourse = asyncHandler(async (req, res, next) => {
     const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
     if(!bootcamp) {
-        return next(
-            new ErrorResponse('No bootcamp with the id of ${req.params.id}'),
-            404
-        );
+        return next(new ErrorResponse('No bootcamp with the id of ${req.params.id}'), 404);
     }
 
     const course = await Course.create(req.body);
@@ -67,10 +64,10 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
     });
 
     if(!course) {
-        next(new ErrorResponse(`Course with the id ${req.params.id} has not been found`, 404));
+        return next(new ErrorResponse(`Course with the id ${req.params.id} has not been found`, 404));
     }
 
-    res.status(201).json({ success: true, data: course});
+    res.status(200).json({ success: true, data: course});
 });
 
 // @desc    Delete a course
@@ -80,10 +77,10 @@ exports.deleteCourse = asyncHandler(async (req, res, next) => {
     const course = await Course.findById(req.params.id);
 
     if(!course) {
-        next(new ErrorResponse(`Course with the id ${req.params.id} has not been found`, 404));
+        return next(new ErrorResponse(`Course with the id ${req.params.id} has not been found`, 404));
     }
 
     await course.remove();
 
-    res.status(201).json({ success: true, data: {} });
+    res.status(200).json({ success: true, data: {} });
 });

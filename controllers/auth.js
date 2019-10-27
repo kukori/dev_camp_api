@@ -101,6 +101,48 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
     sendTokenResponse(user, 200, res);
 });
 
+// @desc    Get current logged in user
+// @route   POST /api/v1/auth/current
+// @access  Private
+exports.getCurrent = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user._id);
+
+    res.status(200).json({ success: true, data: user});
+});
+
+// @desc    Update user details
+// @route   PUT /api/v1/auth/updatedetails
+// @access  Private
+exports.updateUserDetails = asyncHandler(async (req, res, next) => {
+    const fieldsToUpdate = {
+        name: req.body.name,
+        email: req.body.email
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, fieldsToUpdate, {
+        new: true,
+        runValidators: true
+    });
+
+    res.status(200).json({ success: true, data: user});
+});
+
+// @desc    Update password
+// @route   PUT /api/v1/auth/updatepassword
+// @access  Private
+exports.updateUserPassword = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user._id).select('+password');
+
+    if(!await user.matchPassword(req.body.currentPassword)) {
+        return next(new ErrorResponse('Password is incorrect', 401));
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+
+    sendTokenResponse(user, 200, res);
+});
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
     // Create token
@@ -117,12 +159,3 @@ const sendTokenResponse = (user, statusCode, res) => {
 
     res.status(statusCode).cookie('token', token, options).json({ success: true, token });
 }
-
-// @desc    Get current logged in user
-// @route   POST /api/v1/auth/current
-// @access  Private
-exports.getCurrent = asyncHandler(async (req, res, next) => {
-    const user = await User.findById(req.user._id);
-
-    res.status(200).json({ success: true, data: user});
-});
